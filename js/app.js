@@ -1,73 +1,94 @@
-class CalorieTracker{
-    constructor (){
-        this._calorieLimit = 2001;
-        this._totalCalories = 0;
-        this._meals = [];
-        this._workouts = [];
-        this._displayCaloriesTotal()
-        this._displayColoriesConsumed()
-        this._displayColoriesBurned()
-        this._displayCaloriesRemaining()
-    }
+class CalorieTracker {
+  constructor() {
+    this._calorieLimit = 2001;
+    this._totalCalories = 0;
+    this._meals = [];
+    this._workouts = [];
+    this._displayCaloriesTotal();
+    this._displayColoriesConsumed();
+    this._displayColoriesBurned();
+    this._displayCaloriesRemaining();
+  }
 
-    // Public methods 
+  // Public methods
 
-    addMeal(meal){
-        this._meals.push(meal)
-        this._totalCalories += meal.calories;
-        this._render()
-    }
-    addWorkout(workout){
-        this._workouts.push(workout)
-        this._totalCalories -= workout.calories;
-        this._render()
-    }
+  addMeal(meal) {
+    this._meals.push(meal);
+    this._totalCalories += meal.calories;
+    this._render();
+  }
+  addWorkout(workout) {
+    this._workouts.push(workout);
+    this._totalCalories -= workout.calories;
+    this._render();
+  }
 
-    // Private methods 
+  // Private methods
 
-    _displayCaloriesTotal(){
-        const totalCaloriesEl = document.querySelector('#calories-total')
-        totalCaloriesEl.innerHTML = this._totalCalories;
-    }
-    _displayCalorieLimit(){
-        const calorieLimitEl = document.querySelector('#calories-limit')
-        calorieLimitEl.innerHTML = this._calorieLimit;
-    }
+  _displayCaloriesTotal() {
+    const totalCaloriesEl = document.querySelector("#calories-total");
+    totalCaloriesEl.innerHTML = this._totalCalories;
+  }
+  _displayCalorieLimit() {
+    const calorieLimitEl = document.querySelector("#calories-limit");
+    calorieLimitEl.innerHTML = this._calorieLimit;
+  }
 
-    _displayColoriesConsumed(){
-        let totalCaloriesConsumed = this._meals.reduce((acc, current) => acc + current.calories, 0) 
-        let caloriesConsumedEl = document.querySelector('#calories-consumed')
-        caloriesConsumedEl.innerHTML = totalCaloriesConsumed
-        return totalCaloriesConsumed
-    }
-    _displayColoriesBurned(){
-        let totalCaloriesBurned = this._workouts.reduce((acc, current) => acc + current.calories, 0) 
-        let caloriesBurnedEl = document.querySelector('#calories-burned')
-        caloriesBurnedEl.innerHTML = totalCaloriesBurned
-        return totalCaloriesBurned
-    }
+  _displayColoriesConsumed() {
+    let totalCaloriesConsumed = this._meals.reduce(
+      (acc, current) => acc + current.calories,
+      0
+    );
+    let caloriesConsumedEl = document.querySelector("#calories-consumed");
+    caloriesConsumedEl.innerHTML = totalCaloriesConsumed;
+    return totalCaloriesConsumed;
+  }
+  _displayColoriesBurned() {
+    let totalCaloriesBurned = this._workouts.reduce(
+      (acc, current) => acc + current.calories,
+      0
+    );
+    let caloriesBurnedEl = document.querySelector("#calories-burned");
+    caloriesBurnedEl.innerHTML = totalCaloriesBurned;
+    return totalCaloriesBurned;
+  }
 
-    _displayCaloriesRemaining(){
-        let remainingEl = document.querySelector('#calories-remaining')
-       let remaining = this._calorieLimit - this._totalCalories;
-       remainingEl.innerHTML = remaining;
-    }
+  _displayCaloriesRemaining() {
+    const remainingEl = document.querySelector("#calories-remaining");
+    const progressEl = document.querySelector("#calorie-progress");
 
-    _displayCaloriesProgress(){
-        const progressEl = document.querySelector('#calorie-progress')
-        const width = (this._totalCalories/this._calorieLimit) * 100
-        progressEl.setAttribute('style', `width: ${width}%`);
+    let remainingElCard = remainingEl.parentElement;
+    let remaining = this._calorieLimit - this._totalCalories;
+    remainingEl.innerHTML = remaining;
 
+    if (remaining <= 0) {
+      remainingElCard.classList.remove("bg-light");
+      remainingElCard.classList.add("bg-danger");
+      progressEl.classList.remove('bg-success');
+      progressEl.classList.add("bg-danger");
+    } else {
+        remainingElCard.classList.remove("bg-danger");
+        remainingElCard.classList.add("bg-light");
+        progressEl.classList.remove('bg-danger');
+        progressEl.classList.add("bg-success");
     }
+  }
 
-    _render(){
-        this._displayCaloriesTotal()
-        this._displayCalorieLimit()
-        this._displayColoriesConsumed()
-        this._displayColoriesBurned()
-        this._displayCaloriesRemaining()
-        this._displayCaloriesProgress()
-    }
+  _displayCaloriesProgress() {
+    const progressEl = document.querySelector("#calorie-progress");
+    const percentage = (this._totalCalories / this._calorieLimit) * 100;
+    const width = Math.min(percentage, 100); // returns percentage or 100 but not more than 100
+    progressEl.style.width = `${width}%`; // setting this way adds only 'width:' to the existing (if any) style of the element
+  }
+
+  _render() {
+    this._displayCaloriesTotal();
+    this._displayCalorieLimit();
+    this._displayColoriesConsumed();
+    this._displayColoriesBurned();
+    this._displayCaloriesRemaining();
+    this._displayCaloriesProgress();
+  }
 }
 
 class Meal {
@@ -85,19 +106,69 @@ class Workout {
     }
 }
 
- const tracker = new CalorieTracker();
+class App {
+    constructor(){
+        this._tracker = new CalorieTracker();
+        document.querySelector('#meal-form')
+                .addEventListener('submit', this._newMeal.bind(this))
+        document.querySelector('#workout-form')
+                .addEventListener('submit', this._newWorkout.bind(this))
+    }
 
- const breakfast = new Meal('Breakfast', 401);
- const lunch = new Meal('Lunch', 1200);
- const dinner = new Meal('Dinner', 605);
- tracker.addMeal(breakfast);
- tracker.addMeal(lunch);
- tracker.addMeal(dinner);
+    _newMeal(e){
+        e.preventDefault();
+        const name = document.querySelector('#meal-name');
+        const calories = document.querySelector('#meal-calories');
 
- const run = new Workout ('Run', 450);
- const gym = new Workout ('Gym', 850);
+        //validation of inputs 
+        if(name.value === '' || calories.value === ''){
+            alert('Please fill in all fields')
+            return 
+        }
 
- tracker.addWorkout(run);
- tracker.addWorkout(gym);
+        const meal = new Meal(name.value, +calories.value)
+        this._tracker.addMeal(meal)
+        name.value = '';
+        calories.value = '';
+
+        // collapses the meal form once an item is added 
+        const collapseMeal = document.querySelector('#collapse-meal')
+        const bsCollapse = new bootstrap.Collapse(collapseMeal, {
+            toggle: true
+        })
+       
+    }
+    _newWorkout(e){
+        e.preventDefault();
+        const name = document.querySelector('#workout-name');
+        const calories = document.querySelector('#workout-calories');
+
+        //validation of inputs 
+        if(name.value === '' || calories.value === ''){
+            alert('Please fill in all fields')
+            return 
+        }
+
+        const workout = new Workout(name.value, +calories.value);
+        this._tracker.addWorkout(workout);
+        name.value = '';
+        calories.value = '';
+
+        // collapses the workout form once an item is added 
+        const collapseWorkout = document.querySelector('#collapse-workout')
+        const bsCollapse = new bootstrap.Collapse(collapseWorkout, {
+            toggle: true
+        })
+
+        const workoutItems = document.querySelector('#workout-items')
+        const newWorkout = document.createElement('div');
+        // newWorkout.classList.add('card my-2')
+
+        workoutItems.appendChild(newWorkout)
+    }
+}
+
+const app = new App();
+
 
   
